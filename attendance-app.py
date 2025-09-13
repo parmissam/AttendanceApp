@@ -39,7 +39,7 @@ class MainWindow(QMainWindow):
         central_widget = QWidget()
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
-        self.is_face_check_running = False 
+        self.is_face_check_running = False  
 
     def toggle_face_check(self):
         if self.is_face_check_running:
@@ -49,7 +49,7 @@ class MainWindow(QMainWindow):
 
     def start_face_check(self):
         self.is_face_check_running = True
-        self.check_face_button.setText("توقف چک چهره")  
+        self.check_face_button.setText("توقف چک چهره") 
         self.run_face_check()
 
     def stop_face_check(self):
@@ -74,11 +74,11 @@ class MainWindow(QMainWindow):
             conn = sqlite3.connect('../database.db')
             cursor = conn.cursor()
 
-            known_images = []  
-            known_encodings = []  
+            known_images = [] 
+            known_encodings = [] 
             known_nationals = []  
-            known_names = []  
-            known_last_names = [] 
+            known_names = [] 
+            known_last_names = []  
 
             cursor.execute('SELECT national_code, name, last_name, image FROM table1')
             rows = cursor.fetchall()
@@ -91,7 +91,7 @@ class MainWindow(QMainWindow):
                 image_blob = io.BytesIO(image_data)
                 pil_image = Image.open(image_blob)
                 numpy_array = np.array(pil_image)
-                face_encoding = face_recognition.face_encodings(numpy_array)[0] 
+                face_encoding = face_recognition.face_encodings(numpy_array)[0]  # Compute face encoding
                 known_images.append(numpy_array)
                 known_encodings.append(face_encoding)
                 known_nationals.append(national_code)
@@ -101,10 +101,12 @@ class MainWindow(QMainWindow):
             while self.is_face_check_running:
                 ret, frame = video_capture.read()
 
+                # Find faces in the frame
                 face_locations = face_recognition.face_locations(frame)
                 face_encodings = face_recognition.face_encodings(frame, face_locations)
 
                 for face_encoding in face_encodings:
+                    # Compare the captured face with known face encodings
                     matches = face_recognition.compare_faces(known_encodings, face_encoding)
 
                     for i, match in enumerate(matches):
@@ -145,6 +147,7 @@ class MainWindow(QMainWindow):
                 cv2.imshow('Video', frame)
 
                 if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break 
 
             video_capture.release()
             cv2.destroyAllWindows()
@@ -236,7 +239,7 @@ class MemberDefinitionDialog(QDialog):
         self.cap = None
         self.is_camera_active = False
 
-        self.camera_timer = QTimer(self) 
+        self.camera_timer = QTimer(self)  
         self.camera_timer.timeout.connect(self.update_camera_feed)
 
         self.finished.connect(self.stop_camera)
@@ -271,7 +274,6 @@ class MemberDefinitionDialog(QDialog):
                     cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
                     face = frame[y:y + h, x:x + w]
 
-                    
                     self.face_image = face
 
                     self.image_label.setText("تصویر با موفقیت تایید و ثبت شد. برای ادامه دکمه ثبت را فشار دهید.")
@@ -340,6 +342,7 @@ class MemberDefinitionDialog(QDialog):
                 except Exception as e:
                     QMessageBox.critical(self, "خطا", "خطا در ثبت اطلاعات: " + str(e))
                 finally:
+                    # Clear the input fields
                     self.name_input.clear()
                     self.last_name_input.clear()
                     self.national_code_input.clear()
