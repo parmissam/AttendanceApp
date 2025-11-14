@@ -1,6 +1,4 @@
 import face_recognition
-
-print("face_recognition is installed and working!")
 import sys
 import sqlite3, cv2, shutil
 from PyQt5.QtGui import QPixmap, QImage
@@ -36,11 +34,11 @@ class UserTypeDialog(QDialog):
 
     def select_user(self):
         self.selected_type = 'user'
-        self.accept()  # Close the dialog and return QDialog.Accepted
+        self.accept() 
 
     def select_admin(self):
         self.selected_type = 'admin'
-        self.accept()  # Close the dialog and return QDialog.Accepted
+        self.accept() 
 
     def get_selected_type(self):
         return self.selected_type
@@ -52,7 +50,7 @@ class PasswordDialog(QDialog):
         self.layout = QVBoxLayout()
 
         self.password_input = QLineEdit()
-        self.password_input.setEchoMode(QLineEdit.Password)  # Hide password input
+        self.password_input.setEchoMode(QLineEdit.Password)  
         self.submit_button = QPushButton("ورود")
 
         self.submit_button.clicked.connect(self.check_password)
@@ -69,7 +67,7 @@ class PasswordDialog(QDialog):
         password = self.password_input.text()
         if password == "admin123":
             self.password_correct = True
-            self.accept()  # Close the dialog and return QDialog.Accepted
+            self.accept()  
         else:
             QMessageBox.warning(self, "Error", "Incorrect password.")
 
@@ -80,7 +78,6 @@ class EditUserDialog(QDialog):
         
         self.layout = QVBoxLayout()
 
-        # ویجت برای ورودی اسم
         self.name_label = QLabel("نام جدید:")
         self.name_input = QLineEdit()
         self.layout.addWidget(self.name_label)
@@ -115,7 +112,6 @@ class EditUserDialog(QDialog):
                 cursor.execute("UPDATE table1 SET name = ?, last_name = ? WHERE national_code = ?",
                                (new_name, new_last_name, national_code))
                 
-                # بررسی اینکه چند ردیف به‌روزرسانی شده است
                 if cursor.rowcount > 0:
                     conn.commit()
                     QMessageBox.information(self, "ویرایش اطلاعات", "موفقیت: اطلاعات کاربر به‌روزرسانی شد.")
@@ -145,7 +141,6 @@ class ViewUserDialog(QDialog):
         self.view_button.clicked.connect(self.view_user_info)
         self.layout.addWidget(self.view_button)
 
-        # ویجت برای نمایش اطلاعات کاربر
         self.user_info_label = QLabel("")
         self.layout.addWidget(self.user_info_label)
 
@@ -194,7 +189,6 @@ class MainWindow(QMainWindow):
         self.edit_user_button = QPushButton("ویرایش کاربر")
         self.view_user_button = QPushButton("مشاهده اطلاعات کاربر")  
 
-        # اتصال دکمه‌ها به توابع مربوطه
         self.define_member_button.clicked.connect(self.show_define_member_dialog)
         self.delete_member_button.clicked.connect(self.delete_member)
         self.export_excel_button.clicked.connect(self.export_to_excel)
@@ -242,16 +236,15 @@ class MainWindow(QMainWindow):
 
     def start_face_check(self):
         self.is_face_check_running = True
-        self.check_face_button.setText("توقف چک چهره")  # Change button text
+        self.check_face_button.setText("توقف چک چهره") 
         self.run_face_check()
 
     def stop_face_check(self):
         self.is_face_check_running = False
-        self.check_face_button.setText("چک چهره")  # Reset button text
+        self.check_face_button.setText("چک چهره") 
 
     def show_define_member_dialog(self):
         if hasattr(self, 'member_definition_dialog') and self.member_definition_dialog.isVisible():
-            # If the dialog is already open, close it
             self.member_definition_dialog.close()
             return
 
@@ -260,7 +253,6 @@ class MainWindow(QMainWindow):
 
     def run_face_check(self):
         try:
-            # Initialize the webcam
             video_capture = cv2.VideoCapture(0)
             fps_limit = 10
             frame_interval = 0.25 / fps_limit
@@ -299,7 +291,6 @@ class MainWindow(QMainWindow):
                     QMessageBox.warning(self, "خطا", "خطا در دریافت فریم از دوربین.")
                     break
 
-                #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 face_locations = face_recognition.face_locations(frame)
                 face_encodings = face_recognition.face_encodings(frame, face_locations)
 
@@ -369,7 +360,6 @@ class MainWindow(QMainWindow):
                     cursor.execute("DELETE FROM table1 WHERE national_code = ?", (national_code,))
                     conn.commit()
 
-                    # Delete the member's attendance records from table2
                     cursor.execute("DELETE FROM table2 WHERE national_code = ?", (national_code,))
                     conn.commit()
 
@@ -387,13 +377,11 @@ class MainWindow(QMainWindow):
             conn = sqlite3.connect('database.db')
             cursor = conn.cursor()
 
-            # محاسبه ساعات کار و به‌روزرسانی جدول table2
             cursor.execute("SELECT id, vorod, khoroj FROM table2")
             records = cursor.fetchall()
             
             for record in records:
                 id, vorod, khoroj = record
-                # تبدیل زمان‌ها به JalaliDateTime
                 vorod_time = JalaliDateTime.strptime(vorod, '%H:%M:%S')
                 khoroj_time = JalaliDateTime.strptime(khoroj, '%H:%M:%S')
                 
@@ -403,11 +391,9 @@ class MainWindow(QMainWindow):
             
             conn.commit()
 
-            # صادر کردن داده‌ها به Excel
             query = "SELECT * FROM table2"
             df = pd.read_sql_query(query, conn)
 
-            # محاسبه بهترین کارمند با استفاده از GROUP BY
             best_employee_query = """
             SELECT name, last_name, SUM(julianday(khoroj) - julianday(vorod)) * 24 AS total_hours
             FROM table2
@@ -421,10 +407,8 @@ class MainWindow(QMainWindow):
                 max_employee_name = f"{best_employee[0]} {best_employee[1]}"
                 max_hours = best_employee[2]
 
-                # ایجاد تی گزارش برای کارمند با بیشترین ساعات
                 report = f"کارمند با بیشترین ساعات کار: {max_employee_name} با {max_hours:.2f} ساعت."
 
-                # ذخیره تی گزارش به اکسل
                 report_df = pd.DataFrame({'Report': [report]})
                 report_file_path = os.path.join(os.path.expanduser("~/Desktop"), "report.xlsx")
                 with pd.ExcelWriter(report_file_path, engine='openpyxl') as writer:
@@ -471,7 +455,7 @@ class MemberDefinitionDialog(QDialog):
         self.cap = None
         self.is_camera_active = False
 
-        self.camera_timer = QTimer(self)  # Create a timer for updating the camera feed
+        self.camera_timer = QTimer(self)  
         self.camera_timer.timeout.connect(self.update_camera_feed)
 
         self.finished.connect(self.stop_camera)
@@ -484,7 +468,7 @@ class MemberDefinitionDialog(QDialog):
 
     def start_camera(self):
         try:
-            self.cap = cv2.VideoCapture(0)  # Open the default camera (index 0)
+            self.cap = cv2.VideoCapture(0)  
             if not self.cap.isOpened():
                 raise Exception("Unable to access the camera.")
 
@@ -493,7 +477,7 @@ class MemberDefinitionDialog(QDialog):
             self.is_camera_active = True
             self.capture_button.setText("متوقف کردن وبکم")
 
-            self.camera_timer.start(100)  # Update every 100 milliseconds
+            self.camera_timer.start(100) 
 
             while self.is_camera_active:
                 ret, frame = self.cap.read()
@@ -506,10 +490,8 @@ class MemberDefinitionDialog(QDialog):
                     cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
                     face = frame[y:y + h, x:x + w]
 
-                    # Save the face image
                     self.face_image = face
 
-                    # Display success message and enable submit button
                     self.image_label.setText("تصویر با موفقیت تایید و ثبت شد. برای ادامه دکمه ثبت را فشار دهید.")
                     self.submit_button.setEnabled(True)
 
@@ -555,14 +537,11 @@ class MemberDefinitionDialog(QDialog):
                     image_filename = "face_image.jpg"
                     cv2.imwrite(image_filename, self.face_image)
 
-                    # Specify a custom temporary directory for saving the image
                     temp_dir = tempfile.mkdtemp()
                     temp_image_path = os.path.join(temp_dir, "face_image.jpg")
 
-                    # Save the face image in the temporary directory
                     cv2.imwrite(temp_image_path, self.face_image)
 
-                    # Read the temporary image file as binary data
                     with open(temp_image_path, "rb") as image_file:
                         image_data = image_file.read()
 
@@ -579,22 +558,18 @@ class MemberDefinitionDialog(QDialog):
                 except Exception as e:
                     QMessageBox.critical(self, "خطا", "خطا در ثبت اطلاعات: " + str(e))
                 finally:
-                    # Clear the input fields
                     self.name_input.clear()
                     self.last_name_input.clear()
                     self.national_code_input.clear()
                     self.image_label.clear()
 
-                    # Reset the face image
                     self.face_image = None
 
-                    # Disable the submit button again
                     self.submit_button.setEnabled(False)
 
             else:
                 QMessageBox.warning(self, "خطا", "لطفا تمام اطلاعات را وارد کنید و ابتدا عکس چهره خود را ذخیره نمایید.")
         finally:
-            # Clean up the temporary directory and its contents
             if hasattr(self, 'temp_dir') and os.path.exists(self.temp_dir):
                 shutil.rmtree(self.temp_dir)
 
